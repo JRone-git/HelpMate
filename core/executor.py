@@ -12,7 +12,7 @@ from typing import AsyncGenerator, Dict, List, Optional, Union
 import psutil
 from pydantic import BaseModel
 
-from .config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

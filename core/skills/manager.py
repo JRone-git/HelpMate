@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

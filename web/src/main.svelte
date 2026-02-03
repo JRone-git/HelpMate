@@ -38,7 +38,7 @@
     --accent: #3b82f6;
   }
   
-  body {
+  :global(body) {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

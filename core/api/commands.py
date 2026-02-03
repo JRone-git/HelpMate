@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 import logging
 
-from ..executor import ExecutionRequest, ShellExecutor
+from executor import ExecutionRequest, ShellExecutor
 
 logger = logging.getLogger(__name__)
 

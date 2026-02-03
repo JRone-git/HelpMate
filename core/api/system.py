@@ -6,8 +6,8 @@ import platform
 import psutil
 import os
 
-from ..executor import ShellExecutor
-from ..ollama import OllamaClient
+from executor import ShellExecutor
+from ollama import OllamaClient
 
 logger = logging.getLogger(__name__)
 

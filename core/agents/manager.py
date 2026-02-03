@@ -4,9 +4,9 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
 
-from ..ollama import OllamaClient
-from ..executor import ShellExecutor
-from ..config import settings
+from ollama import OllamaClient
+from executor import ShellExecutor
+from config import settings
 
 logger = logging.getLogger(__name__)
 

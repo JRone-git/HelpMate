@@ -5,8 +5,8 @@ from typing import List, AsyncGenerator
 import json
 import logging
 
-from ..ollama import Message, OllamaClient
-from ..executor import ExecutionRequest, ShellExecutor
+from ollama import Message, OllamaClient
+from executor import ExecutionRequest, ShellExecutor
 
 logger = logging.getLogger(__name__)
 

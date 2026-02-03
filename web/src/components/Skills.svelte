@@ -148,13 +148,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-300">
       <div>
         <h4 class="font-medium mb-2">Skill Structure</h4>
-        <pre class="bg-gray-900 p-3 rounded text-xs overflow-auto">{
+        <pre class="bg-gray-900 p-3 rounded text-xs overflow-auto">&#123;
   "name": "my-skill",
   "version": "1.0.0",
   "description": "A custom skill",
   "tools": ["bash", "git"],
   "entrypoint": "scripts/main.py"
-}</pre>
+&#125;</pre>
       </div>
       <div>
         <h4 class="font-medium mb-2">Available Tools</h4>

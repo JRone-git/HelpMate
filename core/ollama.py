@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 import httpx
 from pydantic import BaseModel
 
-from .config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 

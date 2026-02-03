@@ -17,12 +17,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
-from .api import router as api_router
-from .ollama import OllamaClient
-from .executor import ShellExecutor
-from .agents import AgentManager
-from .skills import SkillManager
-from .config import settings
+from api import router as api_router
+from ollama import OllamaClient
+from executor import ShellExecutor
+from agents import AgentManager
+from skills import SkillManager
+from config import settings
 
 # Configure logging
 logging.basicConfig(
