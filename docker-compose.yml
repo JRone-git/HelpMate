@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Backend service
+  clawmate-core:
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - CLAWMATE_HOST=0.0.0.0
+      - CLAWMATE_PORT=8000
+      - CLAWMATE_USE_CONTAINERS=true
+      - CLAWMATE_OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - ./skills:/app/skills
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # Frontend service
+  clawmate-web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - clawmate-core
+    restart: unless-stopped
+
+  # Ollama service
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - clawmate-core
+      - clawmate-web
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  ollama_data:

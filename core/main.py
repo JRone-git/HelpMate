@@ -23,13 +23,10 @@ from executor import ShellExecutor
 from agents import AgentManager
 from skills import SkillManager
 from config import settings
+from logging_config import get_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Get logger instance
+logger = get_logger(__name__)
 
 # Global state
 ollama_client: OllamaClient

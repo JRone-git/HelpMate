@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, AsyncGenerator
+from typing import List, AsyncGenerator, Optional
 import json
 import logging
 
@@ -21,14 +21,15 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     stream: bool = False
-    model: str = None
+    model: Optional[str] = None
 
 
 class CommandRequest(BaseModel):
     command: str
     args: List[str] = []
-    cwd: str = None
-    timeout: int = None
+    cwd: Optional[str] = None
+    env: Optional[dict] = None
+    timeout: Optional[int] = None
     pty: bool = False
     elevated: bool = False
     sandbox: bool = False
@@ -74,15 +75,26 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             # Receive message from client
             data = await websocket.receive_text()
-            request = json.loads(data)
+            try:
+                request = json.loads(data)
+            except json.JSONDecodeError:
+                await websocket.send_text(json.dumps({"error": "Invalid JSON"}))
+                continue
             
             # Process message
+            if "messages" not in request:
+                await websocket.send_text(json.dumps({"error": "No messages provided"}))
+                continue
+                
             messages = [Message(role=msg["role"], content=msg["content"]) for msg in request["messages"]]
             
             # Send to Ollama
             ollama = OllamaClient()
-            async for response in ollama.chat_stream(messages, request.get("model")):
-                await websocket.send_text(response.json())
+            try:
+                async for response in ollama.chat_stream(messages, request.get("model")):
+                    await websocket.send_text(response.json())
+            except Exception as e:
+                await websocket.send_text(json.dumps({"error": f"Ollama error: {str(e)}"}))
                 
     except WebSocketDisconnect:
         logger.info("Client disconnected")
@@ -100,6 +112,7 @@ async def execute_command(request: CommandRequest):
             command=request.command,
             args=request.args,
             cwd=request.cwd,
+            env=request.env,
             timeout=request.timeout,
             pty=request.pty,
             elevated=request.elevated,
@@ -133,13 +146,18 @@ async def command_websocket(websocket: WebSocket):
         while True:
             # Receive command from client
             data = await websocket.receive_text()
-            request = CommandRequest.parse_raw(data)
+            try:
+                request = CommandRequest.parse_raw(data)
+            except Exception as e:
+                await websocket.send_text(json.dumps({"error": f"Invalid request: {str(e)}"}))
+                continue
             
             # Create execution request
             exec_request = ExecutionRequest(
                 command=request.command,
                 args=request.args,
                 cwd=request.cwd,
+                env=request.env,
                 timeout=request.timeout,
                 pty=request.pty,
                 elevated=request.elevated,
@@ -148,8 +166,11 @@ async def command_websocket(websocket: WebSocket):
             
             # Execute with streaming
             executor = ShellExecutor()
-            async for output in executor.stream_output(exec_request):
-                await websocket.send_text(output)
+            try:
+                async for output in executor.stream_output(exec_request):
+                    await websocket.send_text(output)
+            except Exception as e:
+                await websocket.send_text(json.dumps({"error": f"Execution error: {str(e)}"}))
                 
     except WebSocketDisconnect:
         logger.info("Command client disconnected")

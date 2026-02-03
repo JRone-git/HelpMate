@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
@@ -10,19 +9,8 @@ export default defineConfig({
       }
     })
   ],
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, './src')
-    }
-  },
   server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true
-      }
-    }
+    port: 3000
   },
   build: {
     outDir: 'dist',

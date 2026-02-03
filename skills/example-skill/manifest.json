@@ -1,0 +1,10 @@
+{
+  "name": "example-skill",
+  "version": "1.0.0",
+  "description": "Example skill demonstrating ClawMate's skill system",
+  "tools": ["hello", "system_info"],
+  "entrypoint": "scripts/main.py",
+  "windows": {
+    "entrypoint": "scripts/main.ps1"
+  }
+}

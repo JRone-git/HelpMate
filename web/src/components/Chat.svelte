@@ -1,165 +1,149 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { Terminal } from 'xterm';
-  import { FitAddon } from 'xterm-addon-fit';
-  import { WebLinksAddon } from 'xterm-addon-web-links';
+  import axios from 'axios';
   
-  let terminalContainer;
-  let terminal;
-  let fitAddon;
-  let webLinksAddon;
   let messages = [];
   let inputText = '';
-  let isStreaming = false;
-  let ws;
+  let isLoading = false;
+  let messagesEnd;
+  let backendStatus = 'checking';
   
   onMount(() => {
-    // Initialize terminal
-    terminal = new Terminal({
-      theme: {
-        background: '#0f172a',
-        foreground: '#f8fafc',
-        cursor: '#3b82f6'
-      },
-      fontSize: 14,
-      fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-      scrollback: 1000
-    });
+    // Add welcome message
+    messages = [
+      { role: 'assistant', content: 'Hello! I\'m ClawMate, your AI personal assistant. How can I help you today?' }
+    ];
     
-    fitAddon = new FitAddon();
-    webLinksAddon = new WebLinksAddon();
-    
-    terminal.loadAddon(fitAddon);
-    terminal.loadAddon(webLinksAddon);
-    terminal.open(terminalContainer);
-    fitAddon.fit();
-    
-    // Connect to WebSocket
-    connectWebSocket();
-    
-    // Initial greeting
-    terminal.writeln('🦀 Welcome to ClawMate!');
-    terminal.writeln('Type /help for available commands');
-    terminal.writeln('');
+    // Check backend status
+    checkBackendStatus();
   });
   
-  onDestroy(() => {
-    if (ws) {
-      ws.close();
+  async function checkBackendStatus() {
+    try {
+      const response = await axios.get('/api/v1/health', { timeout: 5000 });
+      backendStatus = response.data.status === 'healthy' ? 'connected' : 'error';
+    } catch (error) {
+      backendStatus = 'disconnected';
+      messages = [
+        ...messages,
+        { role: 'system', content: '⚠️ Backend server is not running. Please start the Python backend first.' }
+      ];
     }
-    if (terminal) {
-      terminal.dispose();
-    }
-  });
-  
-  function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/api/v1/chat/ws`;
-    
-    ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-    };
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.message) {
-          terminal.writeln(`\x1b[34mAssistant:\x1b[0m ${data.message}`);
-          isStreaming = false;
-        }
-      } catch (e) {
-        console.error('Failed to parse WebSocket message:', e);
-      }
-    };
-    
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      // Attempt to reconnect after 3 seconds
-      setTimeout(connectWebSocket, 3000);
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
   }
   
   async function sendMessage() {
-    if (!inputText.trim() || isStreaming) return;
+    if (!inputText.trim() || isLoading || backendStatus !== 'connected') return;
     
-    // Display user message
-    terminal.writeln(`\x1b[32mYou:\x1b[0m ${inputText}`);
-    terminal.writeln('');
-    
-    // Send to WebSocket
-    const message = {
-      messages: [
-        { role: 'user', content: inputText }
-      ]
-    };
-    
-    ws.send(JSON.stringify(message));
-    
-    // Clear input
+    const userMessage = inputText.trim();
     inputText = '';
-    isStreaming = true;
+    
+    // Add user message
+    messages = [...messages, { role: 'user', content: userMessage }];
+    isLoading = true;
+    
+    try {
+      const response = await axios.post('/api/v1/chat/send', {
+        messages: messages.map(m => ({ role: m.role, content: m.content })),
+        stream: false
+      });
+      
+      // Add assistant response
+      messages = [...messages, { role: 'assistant', content: response.data.message }];
+    } catch (error) {
+      console.error('Chat error:', error);
+      let errorMessage = 'Sorry, I encountered an error.';
+      
+      if (error.response) {
+        if (error.response.status === 500) {
+          errorMessage = 'Backend server error. Please check the server logs.';
+        } else if (error.response.status === 404) {
+          errorMessage = 'API endpoint not found. Please check if the backend is running.';
+        }
+      } else if (error.request) {
+        errorMessage = 'Unable to connect to backend server. Please make sure it\'s running.';
+      }
+      
+      messages = [...messages, { role: 'assistant', content: errorMessage }];
+    } finally {
+      isLoading = false;
+      scrollToBottom();
+    }
+  }
+  
+  function scrollToBottom() {
+    if (messagesEnd) {
+      messagesEnd.scrollIntoView({ behavior: 'smooth' });
+    }
   }
   
   function handleKeyDown(event) {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       sendMessage();
     }
   }
+  
+  function clearChat() {
+    messages = [
+      { role: 'assistant', content: 'Chat cleared. How can I help you today?' }
+    ];
+  }
 </script>
 
-<div class="h-full flex flex-col">
-  <!-- Terminal Area -->
-  <div class="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
-    <div 
-      bind:this={terminalContainer}
-      class="h-full w-full"
-      style="width: 100%; height: 100%;"
-    ></div>
+<div class="h-full flex flex-col max-w-4xl mx-auto">
+  <!-- Chat Messages -->
+  <div class="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+    {#each messages as message}
+      <div class="flex {message.role === 'user' ? 'justify-end' : 'justify-start'}">
+        <div class="max-w-3xl {message.role === 'user' 
+          ? 'bg-blue-600 text-white rounded-l-lg rounded-tr-lg' 
+          : 'bg-gray-700 text-gray-100 rounded-r-lg rounded-tl-lg'} px-4 py-3">
+          <div class="text-xs mb-1 {message.role === 'user' ? 'text-blue-200' : 'text-gray-400'}">
+            {message.role === 'user' ? 'You' : 'Assistant'}
+          </div>
+          <div class="whitespace-pre-wrap">{message.content}</div>
+        </div>
+      </div>
+    {/each}
+    
+    {#if isLoading}
+      <div class="flex justify-start">
+        <div class="bg-gray-700 text-gray-100 rounded-r-lg rounded-tl-lg px-4 py-3">
+          <div class="text-xs mb-1 text-gray-400">Assistant</div>
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+          </div>
+        </div>
+      </div>
+    {/if}
+    
+    <div bind:this={messagesEnd}></div>
   </div>
   
   <!-- Input Area -->
-  <div class="mt-4 flex gap-3">
-    <input
-      bind:value={inputText}
-      on:keydown={handleKeyDown}
-      placeholder="Type your message... (use /help for commands)"
-      class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-      disabled={isStreaming}
-    />
-    <button
-      on:click={sendMessage}
-      disabled={!inputText.trim() || isStreaming}
-      class="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-    >
-      {isStreaming ? 'Sending...' : 'Send'}
-    </button>
-  </div>
-  
-  <!-- Quick Actions -->
-  <div class="mt-4 flex gap-2 text-sm text-gray-400">
-    <span>Quick actions:</span>
-    <span class="text-blue-400">/help</span>
-    <span>•</span>
-    <span class="text-blue-400">/system</span>
-    <span>•</span>
-    <span class="text-blue-400">/skills</span>
+  <div class="border-t border-gray-700 pt-4">
+    <div class="flex gap-3">
+      <textarea
+        bind:value={inputText}
+        on:keydown={handleKeyDown}
+        placeholder="Type your message... (Shift+Enter for new line)"
+        class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+        rows="2"
+        disabled={isLoading}
+      ></textarea>
+      <button
+        on:click={sendMessage}
+        disabled={!inputText.trim() || isLoading}
+        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors self-end"
+      >
+        {#if isLoading}
+          <span class="animate-pulse">...</span>
+        {:else}
+          Send
+        {/if}
+      </button>
+    </div>
   </div>
 </div>
-
-<style>
-  :global(.xterm) {
-    font-feature-settings: "liga" 0;
-  }
-  
-  :global(.xterm-viewport) {
-    overflow-y: auto;
-  }
-</style>

@@ -53,6 +53,17 @@ clawmate/
 
 ### Quick Start
 
+#### Option 1: Automatic Setup (Recommended)
+```bash
+# Linux/Mac
+./start.sh
+
+# Windows
+start.bat
+```
+
+#### Option 2: Manual Setup
+
 1. **Clone and setup**
 ```bash
 git clone <repository-url>
@@ -73,6 +84,7 @@ npm install
 
 4. **Start Ollama and pull a model**
 ```bash
+ollama serve  # In a separate terminal
 ollama pull qwen3-coder:latest
 ```
 

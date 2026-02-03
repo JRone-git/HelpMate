@@ -4,22 +4,47 @@ __pycache__/
 *$py.class
 *.so
 .Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-.env
-.pytest_cache/
-.coverage
-.pytest_cache/
-htmlcov/
-.tox/
-.nox/
-build/
-dist/
-*.egg-info/
-*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Node.js
 node_modules/
@@ -27,34 +52,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
-yarn.lock
 dist/
-build/
-*.tgz
-
-# Ollama
-ollama_models/
+coverage/
 
 # Logs
 *.log
 logs/
-
-# OS
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-
-# IDE
-.vscode/
-.idea/
-*.sublime-*
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
 
 # Runtime data
 pids
@@ -64,6 +67,9 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+
+# nyc test coverage
+.nyc_output
 
 # Dependency directories
 node_modules/
@@ -107,3 +113,6 @@ jspm_packages/
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+
+# Svelte
+.svelte-kit/
