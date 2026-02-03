@@ -23,11 +23,9 @@
   });
 </script>
 
-<Router {routes}>
-  <Layout>
-    <slot />
-  </Layout>
-</Router>
+<Layout>
+  <Router {routes} />
+</Layout>
 
 <style>
   :root {

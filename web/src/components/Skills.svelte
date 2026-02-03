@@ -168,9 +168,9 @@
       </div>
     </div>
     <div class="mt-4 flex gap-3">
-      <a href="#" class="text-blue-400 hover:text-blue-300">Skill Development Guide</a>
-      <a href="#" class="text-blue-400 hover:text-blue-300">API Reference</a>
-      <a href="#" class="text-blue-400 hover:text-blue-300">Examples</a>
+      <a href="/docs/skills" class="text-blue-400 hover:text-blue-300">Skill Development Guide</a>
+      <a href="/docs/api" class="text-blue-400 hover:text-blue-300">API Reference</a>
+      <a href="/docs/examples" class="text-blue-400 hover:text-blue-300">Examples</a>
     </div>
   </div>
 </div>

@@ -28,7 +28,7 @@
       {#each navigation as item}
         <Link
           href={item.href}
-          class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 hover:text-white {route.path === item.href ? 'bg-gray-700' : ''}"
+          class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 hover:text-white {route.path === item.href ? 'bg-gray-700 text-white' : 'text-gray-300'}"
         >
           <svelte:component this={item.icon} class="w-5 h-5" />
           {item.name}
